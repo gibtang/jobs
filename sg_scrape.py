@@ -41,8 +41,13 @@ class SingaporeDataScraper:
         """Scrape MOM Occupational Wage Tables"""
         raise NotImplementedError("TODO: Implement wage table scraping")
 
-    async def extract_wage_data_from_excel(self, excel_path: Path) -> list:
-        """Extract wage data from downloaded Excel file"""
+    def extract_wage_data_from_excel(self, excel_path: Path) -> list:
+        """Extract wage data from downloaded Excel file (synchronous)
+
+        Note: Column names (Occupation, SSOC_Code, Median_25, Median_50, Median_75)
+        are assumptions based on typical MOM wage table format. May need adjustment
+        based on actual MOM Excel file structure.
+        """
         import pandas as pd
 
         try:
@@ -50,6 +55,7 @@ class SingaporeDataScraper:
             df = pd.read_excel(excel_path)
 
             # Expected columns: Occupation, SSOC_Code, Median_25, Median_50, Median_75
+            # NOTE: These column names may need adjustment based on actual MOM Excel file
             wage_data = []
 
             for _, row in df.iterrows():
