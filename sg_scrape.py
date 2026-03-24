@@ -98,23 +98,26 @@ class SingaporeDataScraper:
         """Scrape all SkillsFuture frameworks"""
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context()
+            try:
+                context = await browser.new_context()
 
-            all_job_roles = []
+                all_job_roles = []
 
-            for framework in self.SKILLS_FRAMEWORKS:
-                url = f"{self.BASE_URL['skillsfuture']}/skills-frameworks/{framework}"
-                job_roles = await self._scrape_framework_job_roles(context, url, framework)
-                all_job_roles.extend(job_roles)
+                for framework in self.SKILLS_FRAMEWORKS:
+                    url = f"{self.BASE_URL['skillsfuture']}/skills-frameworks/{framework}"
+                    job_roles = await self._scrape_framework_job_roles(context, url, framework)
+                    if job_roles:
+                        all_job_roles.extend(job_roles)
 
-            # Save combined data
-            output_path = self.data_dir / "skills_job_roles.json"
-            with open(output_path, "w") as f:
-                json.dump(all_job_roles, f, indent=2)
+                # Save combined data
+                output_path = self.data_dir / "skills_job_roles.json"
+                with open(output_path, "w") as f:
+                    json.dump(all_job_roles, f, indent=2)
 
-            print(f"Saved {len(all_job_roles)} job roles from {len(self.SKILLS_FRAMEWORKS)} frameworks")
+                print(f"Saved {len(all_job_roles)} job roles from {len(self.SKILLS_FRAMEWORKS)} frameworks")
 
-            await browser.close()
+            finally:
+                await browser.close()
 
     async def _scrape_framework_job_roles(self, context, url: str, framework: str) -> list:
         """Scrape job roles from a single framework"""
