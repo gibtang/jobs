@@ -1,0 +1,29 @@
+[
+  {
+    "code": "1111",
+    "title": "Chief Executives and Managing Directors",
+    "category": "Managers",
+    "slug": "chief-executives-and-managing-directors",
+    "sources": [
+      "ssoc"
+    ]
+  },
+  {
+    "code": "1120",
+    "title": "General Managers",
+    "category": "Managers",
+    "slug": "general-managers",
+    "sources": [
+      "ssoc"
+    ]
+  },
+  {
+    "code": "1112",
+    "title": "Legislators and Senior Officials",
+    "category": "Managers",
+    "slug": "legislators-and-senior-officials",
+    "sources": [
+      "ssoc"
+    ]
+  }
+]
