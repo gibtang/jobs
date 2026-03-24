@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>US Job Market Visualizer</title>
+<title>Singapore Job Market Visualizer</title>
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -209,12 +209,12 @@ canvas#canvas {
 <div id="wrapper">
 <div id="header">
   <div class="intro">
-    <h1>US Job Market Visualizer <a href="https://github.com/karpathy/jobs">GitHub</a></h1>
-    <p>This is a research tool that visualizes <b>342 occupations</b> from the <a href="https://www.bls.gov/ooh/">Bureau of Labor Statistics Occupational Outlook Handbook</a>, covering <b>143M jobs</b> across the US economy. Each rectangle's <b>area</b> is proportional to total employment. <b>Color</b> shows the selected metric &mdash; toggle between BLS projected growth outlook, median pay, education requirements, and AI exposure. Click any tile to view its full BLS page. This is not a report, a paper, or a serious economic publication &mdash; it is a development tool for exploring BLS data visually.</p>
-    <p><b>LLM-powered coloring:</b> The <a href="https://github.com/karpathy/jobs">source code</a> includes scrapers, parsers, and a pipeline for writing custom LLM prompts to score and color occupations by any criteria. You write a prompt, the LLM scores each occupation, and the treemap colors accordingly. The "Digital AI Exposure" option is one example &mdash; it estimates how much current AI (which is primarily digital) will reshape each occupation. But you could write a different prompt for any question &mdash; e.g. exposure to humanoid robotics, offshoring risk, climate impact &mdash; and re-run the pipeline to get a different coloring.</p>
+    <h1>Singapore Job Market Visualizer <a href="https://github.com/gibtang/jobs-report-sg">GitHub</a></h1>
+    <p>This is a research tool that visualizes <b>510 occupations</b> from the <a href="https://www.mom.gov.sg">Ministry of Manpower</a> and <a href="https://www.skillsfuture.gov.sg">SkillsFuture Singapore</a>, using the Singapore Standard Occupational Classification (SSOC 2020). Each rectangle's <b>area</b> is proportional to total employment. <b>Color</b> shows the selected metric &mdash; toggle between labour market indicators, median pay, and skills frameworks. This is not a government publication &mdash; it is a development tool for exploring Singapore job market data visually.</p>
+    <p><b>LLM-powered coloring:</b> The <a href="https://github.com/gibtang/jobs-report-sg">source code</a> includes scrapers, parsers, and a pipeline for writing custom LLM prompts to score and color occupations by any criteria. You write a prompt, the LLM scores each occupation, and the treemap colors accordingly. The "Digital AI Exposure" option is one example &mdash; it estimates how much current AI (which is primarily digital) will reshape each occupation. But you could write a different prompt for any question &mdash; e.g. exposure to humanoid robotics, offshoring risk, climate impact &mdash; and re-run the pipeline to get a different coloring.</p>
     <details>
       <summary>View the Digital AI Exposure scoring prompt (example)</summary>
-      <div class="prompt-box">You are an expert analyst evaluating how exposed different occupations are to AI. You will be given a detailed description of an occupation from the Bureau of Labor Statistics.
+      <div class="prompt-box">You are an expert analyst evaluating how exposed different occupations are to AI. You will be given a detailed description of an occupation from Singapore Skills Frameworks.
 
 Rate the occupation's overall AI Exposure on a scale from 0 to 10.
 
@@ -240,15 +240,18 @@ Respond with ONLY a JSON object in this exact format, no other text:
 {"exposure": &lt;0-10&gt;, "rationale": "&lt;2-3 sentences explaining the key factors&gt;"}</div>
     </details>
     <p><b>Caveat on Digital AI Exposure scores:</b> These are rough LLM estimates, not rigorous predictions. A high score does not predict the job will disappear. Software developers score 9/10 because AI is transforming their work &mdash; but demand for software could easily <em>grow</em> as each developer becomes more productive. The score does not account for demand elasticity, latent demand, regulatory barriers, or social preferences for human workers. Many high-exposure jobs will be reshaped, not replaced.</p>
+    <p><b>Data Sources:</b> Occupational data from MOM Occupational Wage Tables (biennial), SkillsFuture Skills Frameworks, and Census 2021. The "Digital AI Exposure" layer uses LLM scoring to estimate how AI will reshape each occupation.</p>
+
+    <p><b>Important Notes:</b> Singapore does not publish occupation-level employment projections. The "Labour Market Indicator" layer uses job vacancy and redundancy rates as a proxy for outlook. Education requirements are not systematically linked to occupations in Singapore data.</p>
   </div>
 
   <div class="controls-row">
     <div class="stat-section">
       <h3>Layer</h3>
       <div class="color-toggle" id="colorToggle">
-        <button data-mode="outlook" class="active">BLS Outlook</button>
+        <button data-mode="outlook" class="active">Labour Market Indicator</button>
         <button data-mode="pay">Median Pay</button>
-        <button data-mode="education">Education</button>
+        <button data-mode="skills">Skills Framework</button>
         <button data-mode="exposure">Digital AI Exposure</button>
       </div>
     </div>
@@ -347,8 +350,8 @@ function tileColorCSS(d, alpha) {
   if (colorMode === "exposure") return exposureColor(d.exposure, alpha);
   if (colorMode === "outlook") return outlookColor(d.outlook, alpha);
   if (colorMode === "pay") return payColor(d.pay, alpha);
-  if (colorMode === "education") {
-    return eduColor(EDU_LEVELS.indexOf(d.education), alpha);
+  if (colorMode === "skills") {
+    return eduColor(EDU_LEVELS.indexOf(d.skills), alpha);
   }
   return `rgba(128,128,128,${alpha})`;
 }
@@ -366,7 +369,7 @@ function tileSubInfo(r) {
     return (r.pay != null ? formatPay(r.pay) : "") +
            (r.jobs ? " \u00b7 " + formatNumber(r.jobs) + " jobs" : "");
   }
-  if (colorMode === "education") {
+  if (colorMode === "skills") {
     const short = {
       "No formal educational credential": "No formal",
       "High school diploma or equivalent": "HS diploma",
@@ -376,7 +379,7 @@ function tileSubInfo(r) {
       "Bachelor's degree": "Bachelor's",
       "Master's degree": "Master's",
       "Doctoral or professional degree": "Doctoral/Prof",
-    }[r.education] || "";
+    }[r.skills] || "";
     return short + (r.jobs ? " \u00b7 " + formatNumber(r.jobs) + " jobs" : "");
   }
   return "";
@@ -536,11 +539,11 @@ function tooltipHighlight(d) {
     return `<span style="color:${color};font-weight:600;">Median Pay: ${formatPay(v)}</span>` +
       `<div style="margin-top:3px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;">` +
       `<div style="height:100%;width:${Math.min(100, v / 150000 * 100)}%;background:${color};border-radius:2px;"></div></div>`;
-  } else if (colorMode === "education") {
-    const edu = d.education || "";
-    const idx = EDU_LEVELS.indexOf(edu);
+  } else if (colorMode === "skills") {
+    const skills = d.skills || "";
+    const idx = EDU_LEVELS.indexOf(skills);
     const color = idx >= 0 ? eduColor(idx, 1) : "var(--fg)";
-    return `<span style="color:${color};font-weight:600;">Education: ${edu || '\u2014'}</span>`;
+    return `<span style="color:${color};font-weight:600;">Skills Framework: ${skills || '\u2014'}</span>`;
   }
   return "";
 }
@@ -553,7 +556,7 @@ function showTooltip(d, mx, my) {
     <span class="label">Median pay</span><span class="value">${formatPay(d.pay)}</span>
     <span class="label">Jobs (2024)</span><span class="value">${formatNumber(d.jobs)}</span>
     <span class="label">Outlook</span><span class="value">${d.outlook != null ? d.outlook + '%' : '\u2014'} ${d.outlook_desc ? '(' + d.outlook_desc + ')' : ''}</span>
-    <span class="label">Education</span><span class="value">${d.education || '\u2014'}</span>`;
+    <span class="label">Skills Framework</span><span class="value">${d.skills || '\u2014'}</span>`;
   tt.querySelector(".tt-rationale").textContent = colorMode === "exposure" ? (d.exposure_rationale || "") : "";
   let tx = mx + 16, ty = my - 16;
   if (tx + 340 > window.innerWidth) tx = mx - 356;
@@ -628,7 +631,7 @@ function updateStats() {
 
   if (colorMode === "outlook") updateOutlookStats(totalJobs);
   else if (colorMode === "pay") updatePayStats(totalJobs);
-  else if (colorMode === "education") updateEducationStats(totalJobs);
+  else if (colorMode === "skills") updateSkillsStats(totalJobs);
   else updateExposureStats(totalJobs);
 }
 
@@ -743,11 +746,11 @@ function updatePayStats(totalJobs) {
   document.getElementById("block8").innerHTML = "";
 }
 
-function updateEducationStats(totalJobs) {
+function updateSkillsStats(totalJobs) {
   // Headline: % Bachelor's+
   let bsJobs = 0;
   for (const d of data) {
-    if (d.jobs && ["Bachelor's degree", "Master's degree", "Doctoral or professional degree"].includes(d.education)) bsJobs += d.jobs;
+    if (d.jobs && ["Bachelor's degree", "Master's degree", "Doctoral or professional degree"].includes(d.skills)) bsJobs += d.jobs;
   }
   document.getElementById("block2").innerHTML = `<h3>Bachelor's+</h3>
     <div class="stat-big"><span style="color:${eduColor(5, 1)}">${(bsJobs / totalJobs * 100).toFixed(0)}%</span></div>
@@ -756,29 +759,29 @@ function updateEducationStats(totalJobs) {
   // Histogram: jobs by education group
   const groups = EDU_GROUPS.map((g, i) => {
     let jobs = 0;
-    for (const d of data) { if (d.jobs && g.match.includes(d.education)) jobs += d.jobs; }
+    for (const d of data) { if (d.jobs && g.match.includes(d.skills)) jobs += d.jobs; }
     return { ...g, jobs, idx: i };
   });
   const maxH = Math.max(...groups.map(g => g.jobs));
-  document.getElementById("block3").innerHTML = `<h3>Jobs by education</h3>
+  document.getElementById("block3").innerHTML = `<h3>Jobs by skills</h3>
     <div class="histogram">${groups.map(g => `<div class="bar" style="height:${Math.max(2, maxH > 0 ? g.jobs / maxH * 100 : 0)}%;background:${eduColor(g.idx * 2, 0.7)}"></div>`).join("")}</div>
     <div class="hist-labels"><span>HS</span><span>BS</span><span>PhD</span></div>`;
 
   // Tier breakdown (same groups with counts)
   const tiers = groups.map((g, i) => ({ label: g.label, jobs: g.jobs, color: eduColor(i * 2, 1) }));
-  document.getElementById("block4").innerHTML = `<h3>Education tiers</h3><div class="tier-bar">${renderTiers(tiers, totalJobs)}</div>`;
+  document.getElementById("block4").innerHTML = `<h3>Skills tiers</h3><div class="tier-bar">${renderTiers(tiers, totalJobs)}</div>`;
 
   // Cross: avg pay by education
-  const payByEdu = weightedAvgByGroups(EDU_GROUPS, (d, g) => g.match.includes(d.education), d => d.pay);
-  document.getElementById("block5").innerHTML = `<h3>Avg pay by education</h3><div class="hbar-chart">${renderHbars(payByEdu.map(g => ({
+  const payByEdu = weightedAvgByGroups(EDU_GROUPS, (d, g) => g.match.includes(d.skills), d => d.pay);
+  document.getElementById("block5").innerHTML = `<h3>Avg pay by skills</h3><div class="hbar-chart">${renderHbars(payByEdu.map(g => ({
     label: g.label, val: "$" + Math.round(g.avg / 1000) + "K",
     pct: Math.max(0, Math.min(100, (Math.log(Math.max(25000, g.avg)) - Math.log(25000)) / (Math.log(250000) - Math.log(25000)) * 100)),
     color: payColor(g.avg, 0.8)
   })))}</div>`;
 
   // Cross: avg outlook by education
-  const olByEdu = weightedAvgByGroups(EDU_GROUPS, (d, g) => g.match.includes(d.education), d => d.outlook);
-  document.getElementById("block6").innerHTML = `<h3>Avg outlook by education</h3><div class="hbar-chart">${renderHbars(olByEdu.map(g => ({
+  const olByEdu = weightedAvgByGroups(EDU_GROUPS, (d, g) => g.match.includes(d.skills), d => d.outlook);
+  document.getElementById("block6").innerHTML = `<h3>Avg outlook by skills</h3><div class="hbar-chart">${renderHbars(olByEdu.map(g => ({
     label: g.label, val: (g.avg > 0 ? "+" : "") + g.avg.toFixed(1) + "%",
     pct: Math.max(0, Math.min(100, (g.avg + 10) / 30 * 100)), color: outlookColor(g.avg, 0.8)
   })))}</div>`;
@@ -786,7 +789,7 @@ function updateEducationStats(totalJobs) {
   // Impact: jobs with no formal degree
   let noDeg = 0;
   for (const d of data) {
-    if (d.jobs && ["No formal educational credential", "High school diploma or equivalent"].includes(d.education)) noDeg += d.jobs;
+    if (d.jobs && ["No formal educational credential", "High school diploma or equivalent"].includes(d.skills)) noDeg += d.jobs;
   }
   document.getElementById("block7").innerHTML = `<h3>No degree / HS</h3>
     <div class="stat-big">${(noDeg / 1e6).toFixed(1)}M</div>
@@ -863,8 +866,8 @@ function resize() { dpr = window.devicePixelRatio || 1; layout(); draw(); }
 const LEGEND_CONFIG = {
   exposure:  { low: "Low", high: "High" },
   outlook:   { low: "Declining", high: "Growing" },
-  pay:       { low: "$25K", high: "$250K" },
-  education: { low: "No degree", high: "Doctoral" },
+  pay:       { low: "$2K", high: "$20K" },  // SGD monthly
+  skills:    { low: "Entry", high: "Advanced" },
 };
 
 function drawGradientLegend() {
