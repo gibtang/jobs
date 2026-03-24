@@ -1,12 +1,27 @@
-# US Job Market Visualizer
+# Singapore Job Market Visualizer
 
-A research tool for visually exploring Bureau of Labor Statistics [Occupational Outlook Handbook](https://www.bls.gov/ooh/) data. This is not a report, a paper, or a serious economic publication — it is a development tool for exploring BLS data visually.
+A research tool for visually exploring Singapore labour market data from the Ministry of Manpower (MOM) and SkillsFuture Singapore. This visualizes **510 occupations** using the Singapore Standard Occupational Classification (SSOC 2020), covering employment across the Singapore economy.
 
-**Live demo: [karpathy.ai/jobs](https://karpathy.ai/jobs/)**
+**Live demo:** (Add URL when deployed)
 
 ## What's here
 
-The BLS OOH covers **342 occupations** spanning every sector of the US economy, with detailed data on job duties, work environment, education requirements, pay, and employment projections. We scraped all of it and built an interactive treemap visualization where each rectangle's **area** is proportional to total employment and **color** shows the selected metric — toggle between BLS projected growth outlook, median pay, education requirements, and AI exposure.
+Each rectangle's **area** is proportional to employment (from Census 2021), and **color** shows the selected metric — toggle between labour market indicators, median pay, skills frameworks, and AI exposure.
+
+## Data Sources
+
+Unlike the US BLS OOH which has comprehensive occupation-level data, Singapore's data is more limited:
+
+- **MOM Occupational Wage Tables**: Biennial wage data by occupation (25th/50th/75th percentile)
+- **SkillsFuture Skills Frameworks**: Job role descriptions for 30+ industries
+- **Census 2021**: Baseline employment counts by occupation
+- **Job Vacancy/Redundancy Rates**: Used as proxy for outlook (Singapore doesn't publish occupation-level projections)
+
+## Limitations
+
+- No occupation-level employment projections (Singapore doesn't publish these)
+- Education requirements not linked to occupations systematically
+- Data updates infrequent (wages: biennial, census: every 10 years)
 
 ## LLM-powered coloring
 
