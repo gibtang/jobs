@@ -41,6 +41,32 @@ class SingaporeDataScraper:
         """Scrape MOM Occupational Wage Tables"""
         raise NotImplementedError("TODO: Implement wage table scraping")
 
+    async def extract_wage_data_from_excel(self, excel_path: Path) -> list:
+        """Extract wage data from downloaded Excel file"""
+        import pandas as pd
+
+        try:
+            # Read Excel file
+            df = pd.read_excel(excel_path)
+
+            # Expected columns: Occupation, SSOC_Code, Median_25, Median_50, Median_75
+            wage_data = []
+
+            for _, row in df.iterrows():
+                wage_data.append({
+                    "occupation": row.get("Occupation", ""),
+                    "ssoc_code": str(row.get("SSOC_Code", "")),
+                    "median_25": float(row.get("Median_25", 0)) if pd.notna(row.get("Median_25")) else None,
+                    "median_50": float(row.get("Median_50", 0)) if pd.notna(row.get("Median_50")) else None,
+                    "median_75": float(row.get("Median_75", 0)) if pd.notna(row.get("Median_75")) else None,
+                })
+
+            return wage_data
+
+        except Exception as e:
+            print(f"Error reading {excel_path}: {e}")
+            return []
+
     async def _download_file(self, page, url: str, dest_path: Path):
         """Download file from URL"""
         try:
@@ -60,6 +86,15 @@ class SingaporeDataScraper:
     async def _scrape_single_framework(self, page, url: str, name: str):
         """Scrape a single skills framework"""
         raise NotImplementedError("TODO: Implement single framework scraping")
+
+    def save_wage_data(self, wage_data: list):
+        """Save wage data to JSON"""
+        output_path = self.data_dir / "wages_extracted.json"
+
+        with open(output_path, "w") as f:
+            json.dump(wage_data, f, indent=2)
+
+        print(f"Saved {len(wage_data)} wage records to {output_path}")
 
 
 async def main():
