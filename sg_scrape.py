@@ -30,6 +30,15 @@ class SingaporeDataScraper:
         "census": "https://www.singstat.gov.sg"
     }
 
+    SKILLS_FRAMEWORKS = [
+        "accountancy",
+        "infocomm-technology",
+        "financial-services",
+        "logistics",
+        "precision-engineering",
+        "retail",
+    ]
+
     def __init__(self, data_dir: str = "./sg_data"):
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(exist_ok=True)
@@ -86,12 +95,50 @@ class SingaporeDataScraper:
             print(f"Failed to download {url}: {e}")
 
     async def scrape_skills_frameworks(self):
-        """Scrape SkillsFuture Skills Frameworks"""
-        raise NotImplementedError("TODO: Implement skills framework scraping")
+        """Scrape all SkillsFuture frameworks"""
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            context = await browser.new_context()
 
-    async def _scrape_single_framework(self, page, url: str, name: str):
-        """Scrape a single skills framework"""
-        raise NotImplementedError("TODO: Implement single framework scraping")
+            all_job_roles = []
+
+            for framework in self.SKILLS_FRAMEWORKS:
+                url = f"{self.BASE_URL['skillsfuture']}/skills-frameworks/{framework}"
+                job_roles = await self._scrape_framework_job_roles(context, url, framework)
+                all_job_roles.extend(job_roles)
+
+            # Save combined data
+            output_path = self.data_dir / "skills_job_roles.json"
+            with open(output_path, "w") as f:
+                json.dump(all_job_roles, f, indent=2)
+
+            print(f"Saved {len(all_job_roles)} job roles from {len(self.SKILLS_FRAMEWORKS)} frameworks")
+
+            await browser.close()
+
+    async def _scrape_framework_job_roles(self, context, url: str, framework: str) -> list:
+        """Scrape job roles from a single framework"""
+        try:
+            page = await context.new_page()
+            await page.goto(url, wait_until="domcontentloaded")
+
+            # Extract job role data
+            job_roles = await page.eval_on_selector_all(
+                "[data-job-role], .job-role-card",
+                """els => els.map(el => ({
+                    title: el.querySelector('.job-title')?.textContent || el.textContent,
+                    description: el.querySelector('.description')?.textContent || '',
+                    skills: Array.from(el.querySelectorAll('.skill-tag')).map(s => s.textContent)
+                }))"""
+            )
+
+            await page.close()
+
+            return [{"framework": framework, **role} for role in job_roles]
+
+        except Exception as e:
+            print(f"Error scraping {framework}: {e}")
+            return []
 
     def save_wage_data(self, wage_data: list):
         """Save wage data to JSON"""
