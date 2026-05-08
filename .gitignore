@@ -26,3 +26,4 @@ embeddings.json
 .dolt/
 *.db
 .beads-credential-key
+.omc/
