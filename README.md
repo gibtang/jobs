@@ -90,3 +90,6 @@ uv run python build_site_data.py
 # Serve the site locally
 cd site && python -m http.server 8000
 ```
+
+## Functionality
+Jobs report data scraper and site builder for Singapore occupational data.
