@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "jobs_report_sg",
+  "project_id": "5ac9621b-2cfc-4afa-b5b3-38fa5d74bcb4"
+}
